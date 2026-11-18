@@ -15,4 +15,8 @@ public class RegimenAcademicoRequest {
 
     @Size(max = 255)
     private String descripcion;
+
+    private Integer periodosPorAnio;
+
+    private Boolean activo;
 }

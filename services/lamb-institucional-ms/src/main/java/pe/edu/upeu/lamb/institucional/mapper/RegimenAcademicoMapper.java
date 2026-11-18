@@ -12,6 +12,8 @@ public class RegimenAcademicoMapper {
         return RegimenAcademico.builder()
                 .nombre(request.getNombre())
                 .descripcion(request.getDescripcion())
+                .periodosPorAnio(request.getPeriodosPorAnio())
+                .activo(request.getActivo() != null ? request.getActivo() : Boolean.TRUE)
                 .build();
     }
 
@@ -20,6 +22,8 @@ public class RegimenAcademicoMapper {
                 .id(entity.getId())
                 .nombre(entity.getNombre())
                 .descripcion(entity.getDescripcion())
+                .periodosPorAnio(entity.getPeriodosPorAnio())
+                .activo(entity.getActivo())
                 .build();
     }
 }

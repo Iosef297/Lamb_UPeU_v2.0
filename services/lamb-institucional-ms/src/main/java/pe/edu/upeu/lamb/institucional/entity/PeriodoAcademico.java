@@ -36,4 +36,8 @@ public class PeriodoAcademico {
 
     @Column(name = "fecha_fin")
     private LocalDate fechaFin;
+
+    /** Periodo padre (p.ej. 2026-I) cuando este registro es un subperiodo/modulo. */
+    @Column(name = "id_periodo_padre")
+    private Long idPeriodoPadre;
 }

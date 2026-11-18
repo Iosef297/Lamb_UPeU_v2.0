@@ -43,9 +43,12 @@ export class AuthService {
   // Es un claim aparte de `sub` (keycloak/README.md) — nunca se colapsa a sub como en pagatu S07b.
   readonly idPersona = computed(() => this.claims()?.idPersona ?? null);
 
+  // TEMPORAL: siempre true mientras el login esta desactivado (ver CONTEXTO_SESION.md seccion 7),
+  // para no ocultar botones de Agregar/Editar/Eliminar que dependen de rol sin haber sesion real.
   tieneRol(...rolesEsperados: string[]): boolean {
-    const propios = this.roles();
-    return rolesEsperados.some((r) => propios.includes(r));
+    return true;
+    // const propios = this.roles();
+    // return rolesEsperados.some((r) => propios.includes(r));
   }
 
   async iniciarLogin(destino: string): Promise<void> {

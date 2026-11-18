@@ -19,6 +19,26 @@ spring:
               uri: lb://lamb-personas-ms
               predicates:
                 - Path=/api/v1/persona/**
+            - id: lamb-personas-relacion-responsable
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/relacion-responsable/**
+            - id: lamb-personas-documento-persona
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/documento-persona/**
+            - id: lamb-personas-identificacion
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/identificacion/**
+            - id: lamb-personas-contacto-direccion
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/contacto-direccion/**
+            - id: lamb-personas-datos-personales
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/datos-personales/**
             - id: lamb-institucional-facultades
               uri: lb://lamb-institucional-ms
               predicates:
@@ -27,6 +47,34 @@ spring:
               uri: lb://lamb-institucional-ms
               predicates:
                 - Path=/api/v1/programas/**
+            - id: lamb-institucional-calendario
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/calendario/**
+            - id: lamb-institucional-campus-sede
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/campus-sede/**
+            - id: lamb-institucional-facultad-escuela
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/facultad-escuela/**
+            - id: lamb-institucional-institucion
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/institucion/**
+            - id: lamb-institucional-parametro-auditoria
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/parametro-auditoria/**
+            - id: lamb-institucional-periodo-academico
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/periodo-academico/**
+            - id: lamb-institucional-programa-academico
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/programa-academico/**
             - id: lamb-planificacion-cursos
               uri: lb://lamb-planificacion-ms
               predicates:
@@ -43,10 +91,54 @@ spring:
               uri: lb://lamb-admision-ms
               predicates:
                 - Path=/api/v1/postulaciones/**
+            - id: lamb-admision-convocatorias
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/convocatorias/**
+            - id: lamb-admision-postulantes
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/postulantes/**
+            - id: lamb-admision-inscripciones
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/inscripciones/**
+            - id: lamb-admision-examenes
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/examenes-admision/**
+            - id: lamb-admision-seguimientos
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/seguimientos/**
+            - id: lamb-admision-calificaciones
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/calificaciones/**
+            - id: lamb-admision-adjudicaciones
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/adjudicaciones/**
+            - id: lamb-admision-casos-especiales
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/casos-especiales/**
+            - id: lamb-admision-tipos-documento
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/tipos-documento/**
+            - id: lamb-admision-modalidades
+              uri: lb://lamb-admision-ms
+              predicates:
+                - Path=/api/v1/modalidades-admision/**
             - id: lamb-curriculo
               uri: lb://lamb-curriculo-ms
               predicates:
                 - Path=/api/v1/planes-estudio/**
+            - id: lamb-curriculo-mallas
+              uri: lb://lamb-curriculo-ms
+              predicates:
+                - Path=/api/v1/mallas-curriculares/**
             - id: lamb-matricula
               uri: lb://lamb-matricula-ms
               predicates:
@@ -63,6 +155,26 @@ spring:
               uri: lb://lamb-trayectoria-ms
               predicates:
                 - Path=/api/v1/trayectorias/**
+            - id: lamb-trayectoria-cumplimientos
+              uri: lb://lamb-trayectoria-ms
+              predicates:
+                - Path=/api/v1/cumplimientos-requisito/**
+            - id: lamb-trayectoria-alertas-riesgo
+              uri: lb://lamb-trayectoria-ms
+              predicates:
+                - Path=/api/v1/alertas-riesgo/**
+            - id: lamb-trayectoria-tutorias
+              uri: lb://lamb-trayectoria-ms
+              predicates:
+                - Path=/api/v1/tutorias/**
+            - id: lamb-trayectoria-reconocimientos
+              uri: lb://lamb-trayectoria-ms
+              predicates:
+                - Path=/api/v1/reconocimientos/**
+            - id: lamb-trayectoria-egresos
+              uri: lb://lamb-trayectoria-ms
+              predicates:
+                - Path=/api/v1/egresos/**
             - id: lamb-finanzas
               uri: lb://lamb-finanzas-ms
               predicates:

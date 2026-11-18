@@ -15,4 +15,8 @@ public class ProgramaSedeRequest {
     private Long idSede;
 
     private Boolean vigente;
+
+    private Long idModalidadEstudio;
+
+    private Long idRegimenAcademico;
 }

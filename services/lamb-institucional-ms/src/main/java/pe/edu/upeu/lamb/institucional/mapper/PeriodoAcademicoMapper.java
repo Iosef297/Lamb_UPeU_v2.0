@@ -15,6 +15,7 @@ public class PeriodoAcademicoMapper {
                 .idTipoPeriodo(request.getIdTipoPeriodo())
                 .fechaInicio(request.getFechaInicio())
                 .fechaFin(request.getFechaFin())
+                .idPeriodoPadre(request.getIdPeriodoPadre())
                 .build();
     }
 
@@ -26,6 +27,7 @@ public class PeriodoAcademicoMapper {
                 .idTipoPeriodo(entity.getIdTipoPeriodo())
                 .fechaInicio(entity.getFechaInicio())
                 .fechaFin(entity.getFechaFin())
+                .idPeriodoPadre(entity.getIdPeriodoPadre())
                 .build();
     }
 }

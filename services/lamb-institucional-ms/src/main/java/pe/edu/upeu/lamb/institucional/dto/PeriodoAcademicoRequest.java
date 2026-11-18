@@ -23,4 +23,6 @@ public class PeriodoAcademicoRequest {
     private LocalDate fechaInicio;
 
     private LocalDate fechaFin;
+
+    private Long idPeriodoPadre;
 }

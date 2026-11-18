@@ -25,8 +25,10 @@ public class ProgramaAcademicoController {
 
     private final ProgramaService programaService;
     private final NivelAcademicoService nivelAcademicoService;
+    private final GradoAcademicoCatalogoService gradoAcademicoCatalogoService;
     private final ModalidadEstudioService modalidadEstudioService;
     private final RegimenAcademicoService regimenAcademicoService;
+    private final RegimenModalidadService regimenModalidadService;
     private final ProgramaSedeService programaSedeService;
     private final GradoTituloService gradoTituloService;
     private final ResolucionProgramaService resolucionProgramaService;
@@ -84,6 +86,38 @@ public class ProgramaAcademicoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminarNivelAcademico(@PathVariable Long id) {
         nivelAcademicoService.eliminar(id);
+    }
+
+    // --- Grado academico (catalogo flexible) ---
+
+    @GetMapping("/grados-academicos")
+    @Operation(summary = "Listar grados academicos")
+    public List<GradoAcademicoCatalogoResponse> listarGradosAcademicos() {
+        return gradoAcademicoCatalogoService.listar();
+    }
+
+    @GetMapping("/grados-academicos/{id}")
+    @Operation(summary = "Obtener un grado academico")
+    public GradoAcademicoCatalogoResponse obtenerGradoAcademico(@PathVariable Long id) {
+        return gradoAcademicoCatalogoService.obtener(id);
+    }
+
+    @PostMapping("/grados-academicos")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Crear un grado academico")
+    public GradoAcademicoCatalogoResponse crearGradoAcademico(@Valid @RequestBody GradoAcademicoCatalogoRequest request) {
+        return gradoAcademicoCatalogoService.crear(request);
+    }
+
+    @PutMapping("/grados-academicos/{id}")
+    public GradoAcademicoCatalogoResponse actualizarGradoAcademico(@PathVariable Long id, @Valid @RequestBody GradoAcademicoCatalogoRequest request) {
+        return gradoAcademicoCatalogoService.actualizar(id, request);
+    }
+
+    @DeleteMapping("/grados-academicos/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarGradoAcademico(@PathVariable Long id) {
+        gradoAcademicoCatalogoService.eliminar(id);
     }
 
     // --- Modalidad de estudio (item 21) ---
@@ -148,6 +182,30 @@ public class ProgramaAcademicoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminarRegimenAcademico(@PathVariable Long id) {
         regimenAcademicoService.eliminar(id);
+    }
+
+    // --- Regimen-modalidad (N:M: que modalidades aplican a cada regimen) ---
+
+    @GetMapping("/regimen-modalidad")
+    @Operation(summary = "Listar relaciones regimen-modalidad")
+    public List<RegimenModalidadResponse> listarRegimenModalidad(@RequestParam(required = false) Long idRegimenAcademico) {
+        return idRegimenAcademico != null
+                ? regimenModalidadService.listarPorRegimen(idRegimenAcademico)
+                : regimenModalidadService.listar();
+    }
+
+    @PostMapping("/regimen-modalidad")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Vincular una modalidad a un regimen academico")
+    public RegimenModalidadResponse crearRegimenModalidad(@Valid @RequestBody RegimenModalidadRequest request) {
+        return regimenModalidadService.crear(request);
+    }
+
+    @DeleteMapping("/regimen-modalidad/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Desvincular una modalidad de un regimen academico")
+    public void eliminarRegimenModalidad(@PathVariable Long id) {
+        regimenModalidadService.eliminar(id);
     }
 
     // --- Programa-sede (item 23) ---

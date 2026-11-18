@@ -21,4 +21,10 @@ public class RegimenAcademico {
 
     @Column(name = "descripcion", length = 255)
     private String descripcion;
+
+    @Column(name = "periodos_por_anio")
+    private Integer periodosPorAnio;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo;
 }

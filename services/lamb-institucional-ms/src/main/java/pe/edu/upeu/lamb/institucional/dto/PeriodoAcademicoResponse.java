@@ -20,4 +20,5 @@ public class PeriodoAcademicoResponse {
     private Long idTipoPeriodo;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
+    private Long idPeriodoPadre;
 }

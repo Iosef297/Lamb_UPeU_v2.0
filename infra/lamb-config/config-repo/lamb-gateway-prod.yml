@@ -16,6 +16,30 @@ spring:
               uri: lb://lamb-personas-ms
               predicates:
                 - Path=/api/v1/personas/**
+            - id: lamb-personas-persona
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/persona/**
+            - id: lamb-personas-relacion-responsable
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/relacion-responsable/**
+            - id: lamb-personas-documento-persona
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/documento-persona/**
+            - id: lamb-personas-identificacion
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/identificacion/**
+            - id: lamb-personas-contacto-direccion
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/contacto-direccion/**
+            - id: lamb-personas-datos-personales
+              uri: lb://lamb-personas-ms
+              predicates:
+                - Path=/api/v1/datos-personales/**
             - id: lamb-institucional-facultades
               uri: lb://lamb-institucional-ms
               predicates:
@@ -24,6 +48,34 @@ spring:
               uri: lb://lamb-institucional-ms
               predicates:
                 - Path=/api/v1/programas/**
+            - id: lamb-institucional-calendario
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/calendario/**
+            - id: lamb-institucional-campus-sede
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/campus-sede/**
+            - id: lamb-institucional-facultad-escuela
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/facultad-escuela/**
+            - id: lamb-institucional-institucion
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/institucion/**
+            - id: lamb-institucional-parametro-auditoria
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/parametro-auditoria/**
+            - id: lamb-institucional-periodo-academico
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/periodo-academico/**
+            - id: lamb-institucional-programa-academico
+              uri: lb://lamb-institucional-ms
+              predicates:
+                - Path=/api/v1/programa-academico/**
             - id: lamb-planificacion-cursos
               uri: lb://lamb-planificacion-ms
               predicates:

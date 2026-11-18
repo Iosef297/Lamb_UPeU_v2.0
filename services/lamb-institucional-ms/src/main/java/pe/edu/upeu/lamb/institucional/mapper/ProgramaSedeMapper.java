@@ -13,6 +13,8 @@ public class ProgramaSedeMapper {
                 .idPrograma(request.getIdPrograma())
                 .idSede(request.getIdSede())
                 .vigente(request.getVigente())
+                .idModalidadEstudio(request.getIdModalidadEstudio())
+                .idRegimenAcademico(request.getIdRegimenAcademico())
                 .build();
     }
 
@@ -22,6 +24,8 @@ public class ProgramaSedeMapper {
                 .idPrograma(entity.getIdPrograma())
                 .idSede(entity.getIdSede())
                 .vigente(entity.getVigente())
+                .idModalidadEstudio(entity.getIdModalidadEstudio())
+                .idRegimenAcademico(entity.getIdRegimenAcademico())
                 .build();
     }
 }

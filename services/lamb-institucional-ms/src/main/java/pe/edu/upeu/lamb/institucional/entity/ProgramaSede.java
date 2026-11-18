@@ -24,4 +24,10 @@ public class ProgramaSede {
 
     @Column(name = "vigente")
     private Boolean vigente;
+
+    @Column(name = "id_modalidad_estudio")
+    private Long idModalidadEstudio;
+
+    @Column(name = "id_regimen_academico")
+    private Long idRegimenAcademico;
 }

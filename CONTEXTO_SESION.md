@@ -132,3 +132,80 @@ S11: integración frontend Angular + Keycloak. Explícitamente pospuesto hasta t
 3. Si el Bloque 1 quedó incompleto, continuar desde donde se cortó — no repetir desde cero lo que ya esté hecho y compilando.
 4. Si el Bloque 1 ya está completo y validado, seguir con el Bloque 2, dominio por dominio (no los 12 de una vez).
 5. Mantener la misma regla: las guías `.md` de sesión mandan sobre lo que ya exista copiado de D:.
+
+## 7. Sesión 2026-11-05 — Fusión de frontends
+
+**Contexto**: existía un segundo repo de pruebas, `F:\PRUEBA 3 XD\Admision_Trayectoria_Lamb` (NO es el repo de trabajo, solo fuente de diseño), con un frontend Angular nuevo (shell/home, wizard de postulación con RENIEC+email, CRUD genérico data-driven de 14 entidades Admisión/Trayectoria vía `cruds.catalog.ts`) y backend con `PostulacionWizardController/Service`, `ReniecController/Service`, `EmailService` (Resend) en `services/lamb-admision-ms` de ESE repo.
+
+**Se hizo** (todo dentro de `F:\SISTEMAS\Lamb_UPeU_v2.0\clients\lamb-frontend`, nada fuera de esa carpeta, nada en el repo de pruebas):
+- El diseño/estructura del frontend de pruebas (shell, home, wizard, CRUD genérico) se volvió la base oficial del frontend de este repo.
+- Se preservó TODA la lógica propia que ya tenía este frontend: los 10 módulos de negocio (facultades, programas, cursos, grupos, planes-estudio, matriculas, notas, actas, pagos, personas) se portaron tal cual (services/modelos/components sin cambios de lógica) y quedaron enlazados en el sidebar nuevo.
+- Auth PKCE propio de este repo (`core/auth/*`) se mantuvo — reemplazó al `keycloak-js` que traía el frontend de pruebas.
+- `environment.ts` unificado a `apiBaseUrl` (antes el frontend de pruebas usaba `apiUrl` — se corrigió `core/api.service.ts` para usar `apiBaseUrl`).
+- Se agregó `@angular/animations` (faltaba, requerida por Material/animations async, causaba error de build) y se quitó `keycloak-js` (ya no se usa).
+- Código muerto eliminado: `features/microservicios/*` (CRUD genérico viejo), `core/layout/*` (layout viejo).
+- `npm install` + `npx ng build` verificados OK, 0 errores (solo warnings preexistentes inofensivos).
+
+**⚠️ IMPORTANTE — PENDIENTE CRÍTICO DE SEGURIDAD**:
+Por pedido explícito del usuario, se **quitó temporalmente el `authGuard`/`rolGuard` de TODAS las rutas** en `src/app/app.routes.ts` (antes algunas rutas del área de Admisión/Trayectoria ya no lo tenían por un descuido de la fusión, y se decidió quitarlo de todas por ahora para poder navegar/probar sin login).
+**Ahora mismo NINGUNA ruta pide autenticación.** Esto es temporal para poder trabajar/probar el frontend fusionado sin friction de login.
+**ANTES DE CERRAR ESTE TRABAJO / IR A PRODUCCIÓN: hay que volver a poner `canActivate: [authGuard]` (y los `rolGuard`/`GESTION` correspondientes por ruta) en `app.routes.ts`.** Está documentado tal cual estaba antes en este mismo archivo de contexto (sección de rutas con guards, ver git history o el reporte de la fusión) — se puede restaurar comparando con `git diff` de ese archivo si no se recuerda el detalle exacto.
+
+También se desactivó el redirect automático a Keycloak en `core/auth/auth-interceptor.ts`: antes, cualquier respuesta 401 del backend disparaba `auth.iniciarLogin(...)` y mandaba al navegador a la pantalla de login de Keycloak aunque la ruta no tuviera guard (por eso aparecía el login igual tras quitar los guards — lo disparaba el interceptor, no el router). Ahora un 401 solo deja pasar el error (sin redirect). **Hay que revertir este cambio también** al reactivar el auth: volver a llamar `auth.iniciarLogin(location.pathname)` dentro del `if (!token)` del interceptor.
+
+También se desactivó la seguridad en el Gateway (`infra/lamb-gateway/.../SecurityConfig.java`): el frontend sin login seguía recibiendo 401 reales del Gateway (`anyRequest().authenticated()`), porque ahí la protección es independiente del frontend. Se cambió a `.anyRequest().permitAll()` y se dejaron **comentadas** (no borradas) todas las reglas `hasAnyRole`/`authenticated` originales justo debajo, para restaurar tal cual estaban. **Hay que recompilar y reiniciar el Gateway** para que este cambio tome efecto (no es hot-reload como el frontend). Al reactivar el auth: descomentar el bloque original y borrar la línea `.anyRequest().permitAll()` + el comentario TEMPORAL.
+
+Además se encontró que faltaban rutas en el Gateway (`infra/lamb-config/config-repo/lamb-gateway-dev.yml`): solo estaban ruteados `/api/v1/postulaciones/**` (admision) y `/api/v1/trayectorias/**` (trayectoria), pero el frontend fusionado usa 14 entidades del catálogo CRUD genérico (`cruds.catalog.ts`). Se agregaron las rutas faltantes hacia `lamb-admision-ms` (convocatorias, postulantes, inscripciones, examenes-admision, seguimientos, calificaciones, adjudicaciones, casos-especiales, tipos-documento, modalidades-admision) y hacia `lamb-trayectoria-ms` (cumplimientos-requisito, alertas-riesgo, tutorias, reconocimientos, egresos). Los controllers ya existían en ambos microservicios, solo faltaba el ruteo. Como es config-repo (config server), no requiere recompilar el Gateway, solo reiniciarlo (o `/actuator/refresh` si está habilitado) para que tome las rutas nuevas.
+
+**Segunda capa de seguridad encontrada y desactivada (cada microservicio, no solo el Gateway)**: después de desactivar la seguridad del Gateway y arreglar las rutas, el 401 en `/api/v1/convocatorias` seguía apareciendo. Causa: CADA microservicio tiene su propio `SecurityConfig.java` (`oauth2ResourceServer` independiente) que exige JWT válido sin importar lo que permita el Gateway — es una segunda línea de defensa documentada en el propio comentario del Gateway ("la valida cada microservicio por su cuenta"). Se aplicó el mismo cambio temporal (`anyRequest().permitAll()`, reglas originales comentadas debajo, no borradas) en los `SecurityConfig.java` de los **11 microservicios**: `lamb-admision-ms`, `lamb-trayectoria-ms`, `lamb-ingresos-pagos-ms`, `lamb-planificacion-ms`, `lamb-matricula-ms`, `lamb-finanzas-ms`, `lamb-evaluacion-ms`, `lamb-curriculo-ms`, `lamb-institucional-ms`, `lamb-personas-ms`, `lamb-lms-ms`. **Cada uno requiere recompilar y reiniciar ese microservicio** (no hot-reload) para que el cambio tome efecto. **Al reactivar el auth: en cada uno de estos 11 archivos, descomentar el bloque original (`requestMatchers(...).permitAll()` + `anyRequest().authenticated()`) y borrar `.anyRequest().permitAll()` + el comentario TEMPORAL.**
+
+**`tieneRol()` siempre `true` temporalmente** (`core/auth/auth-service.ts`): con el login desactivado no hay token/roles, así que `auth.tieneRol('ADMIN', 'COORDINADOR')` devolvía `false` en todos lados y ocultaba botones de "Nuevo/Agregar", columnas de "Acciones" (editar/eliminar) en las páginas con lógica propia (ej. Personas) que gatean esos controles por rol. Se cambió `tieneRol()` para devolver `true` siempre, con la lógica real comentada debajo. **Al reactivar el auth: borrar el `return true;` y descomentar la lógica real.**
+
+**Módulos Institucional y Personas agregados al frontend (PERMANENTE, no es bypass temporal)**: a pedido del usuario, `lamb-institucional-ms` y `lamb-personas-ms` ahora aparecen en el sidebar como módulos completos, replicando exactamente el mismo patrón de catálogo CRUD genérico que ya usaban Admisión y Trayectoria (un solo componente `crud-generic` + un array `CrudDef[]` que lo configura todo), no el patrón de componentes dedicados de "destino". Se cubrió **todos los sub-recursos** de ambos microservicios: cada endpoint GET/POST/PUT/DELETE de cada controller se convirtió en su propia entrada `CrudDef` — **46 entradas de Institucional + 50 de Personas = 96 entradas nuevas** (slugs prefijados `inst-`/`per-` para evitar choques, ej. dos "facultades" y tres "tipos-documento" distintos). Archivos tocados:
+  - `clients/lamb-frontend/src/app/features/cruds.catalog.ts`: tipo `CrudDef.group` ampliado a `'Admisión' | 'Trayectoria' | 'Institucional' | 'Personas'`; se agregaron las 96 entradas nuevas al array `CRUDS` (total 111 entradas).
+  - `clients/lamb-frontend/src/app/layout/shell.component.ts`: `ModuleKey` ampliado; se agregaron computeds `institucional`, `personas`, `showInstitucional`, `showPersonas`.
+  - `clients/lamb-frontend/src/app/layout/shell.component.html`: dos bloques nuevos de `nav-group` (Institucional, Personas) con `@for` sobre el catálogo filtrado, más dos links de fallback en el bloque "Módulos" cuando no hay módulo activo.
+  - `infra/lamb-config/config-repo/lamb-gateway-dev.yml` y `-prod.yml`: se agregaron las rutas del Gateway faltantes para los 9 base-paths de Institucional (`/api/v1/facultades`, `/api/v1/programas`, `/api/v1/calendario`, `/api/v1/campus-sede`, `/api/v1/facultad-escuela`, `/api/v1/institucion`, `/api/v1/parametro-auditoria`, `/api/v1/periodo-academico`, `/api/v1/programa-academico`) y los 6 de Personas (`/api/v1/persona`, `/api/v1/relacion-responsable`, `/api/v1/documento-persona`, `/api/v1/identificacion`, `/api/v1/contacto-direccion`, `/api/v1/datos-personales`) — antes solo existían rutas explícitas para `/api/v1/facultades`, `/api/v1/programas` y `/api/v1/persona` (dev) / `/api/v1/personas` (prod, con un typo preexistente en plural que no se tocó). No se modificó nada de Admisión/Trayectoria/Gestión académica — trabajo puramente aditivo. `npx tsc --noEmit` pasó limpio tras los cambios en el frontend.
+
+**Pendiente adicional**:
+- Backend de destino (`services/lamb-admision-ms` de este repo) todavía NO tiene los endpoints nuevos (`PostulacionWizardController`, `ReniecController`, `EmailService`) — solo existen en el backend del repo de pruebas. El wizard/RENIEC del frontend fusionado va a fallar (404) contra el backend de este repo hasta portar esa lógica de backend también.
+- `public/silent-check-sso.html` quedó huérfano (del keycloak-js viejo), no rompe nada pero se puede borrar.
+
+## 8. Sesión 2026-11-05 (continuación) — Pulido UI Institucional/Personas
+
+**Se hizo**:
+- `cruds.catalog.ts`: agregado campo opcional `subgroup?: string` a `CrudDef` (solo organiza sidebar, no afecta la página CRUD). Las 46 entradas de Institucional se agruparon en 7 subgrupos (Programa académico, Periodo académico, Parámetros y auditoría, Institución, Campus y sede, Facultad y escuela, Calendario académico) y las 50 de Personas en 6 (Relación y responsables, Persona, Documentos de persona, Identificación, Contacto y dirección, Datos personales) — cobertura 1:1 verificada (46+50).
+- `shell.component.ts`: agregado `agrupar()` (computed que bucketiza por `subgroup`), `institucionalGrouped`/`personasGrouped`, y manejo de apertura/cierre por subgrupo vía `Map<string, boolean>` de overrides (`undefined` = usa default: abierto si contiene el slug activo; override explícito del usuario tiene prioridad).
+- `shell.component.html`: ambos bloques planos (Institucional/Personas) reemplazados por acordeón anidado (botón subgrupo + lista condicional de items).
+- `shell.component.scss`: estilos nuevos `.nav-subgroup`/`.nav-item--sub` + soporte modo colapsado.
+- Bug fix: el acordeón no colapsaba si contenía el item activo (ej. "Programa académico", "Persona") — el default forzaba `true` sin mirar el toggle del usuario. Corregido con el patrón de overrides de arriba.
+- Fix de ícono: "Relación familiar" usaba `diversity_3`, casi idéntico visualmente a `family_restroom` de "Tipo de parentesco" en tamaño sidebar — cambiado a `groups` (ambos confirmados con `npx tsc --noEmit`, exit limpio).
+- Se revisó que `TipoParentesco`/`RelacionFamiliar` NO son lógica duplicada a nivel de datos: `TipoParentesco` es catálogo (`id`,`nombre`), `RelacionFamiliar` es tabla transaccional con FK a ese catálogo (`id_persona`, `id_persona_relacionada`, `id_tipo_parentesco`, `fecha_registro`). Separación correcta a nivel de tablas/backend — no tocar eso.
+
+**PENDIENTE — pedido explícito del usuario, NO hecho todavía**:
+Fusionar en la UI (solo frontend, no backend) las pantallas `per-tipos-parentesco` ("Tipo de parentesco") y `per-relaciones-familiares` ("Relación familiar") del catálogo Personas en **una sola entrada de sidebar** con tabs internas (ej. "Relaciones" / "Tipos"), para comodidad — no fusionar tablas/entidades de backend (eso rompería normalización, confirmado con el usuario). El componente genérico `crud-generic` actual no soporta tabs — hay que ver si conviene:
+  (a) extender `crud-generic` con un modo "tabs" opcional sobre 2+ `CrudDef`, o
+  (b) crear un componente dedicado nuevo solo para este caso.
+Aplicar el mismo criterio "fusionar en UI para comodidad" a cualquier otro par catálogo/transacción similar dentro de Institucional o Personas si aplica (ej. revisar si hay otros pares tipo-catálogo + tabla-que-lo-usa en los 96 CRUDs nuevos antes de dar por terminado).
+
+**Todavía sin resolver, re-confirmar con el usuario al retomar**:
+- Gateway: las rutas de Institucional/Personas en `lamb-gateway-dev.yml` están bien definidas (confirmado leyendo el archivo completo), pero el Gateway corriendo no las recargó (Spring Cloud Config no hace hot-reload sin restart/`/actuator/refresh`) → sigue dando 404 "No static resource" en `/api/v1/programa-academico/menciones-especialidad` y probablemente en el resto de rutas nuevas. Pregunté al usuario si reiniciar el servicio — no respondió, quedó pendiente.
+
+---
+
+## Sesion 2026-11-16 (regimen<->modalidad multiref + fixes)
+
+**Backend**:
+- Fix `V14__regimen_modalidad.sql` (lamb-institucional-ms): seed cambiado de IDs hardcodeados a `INSERT...SELECT...WHERE nombre='...' ON CONFLICT DO NOTHING` (match por nombre, no id) pq Modular habia sido borrado via CRUD y rompia FK. Compilado ok (`mvnw.cmd -q -o compile`).
+- Pendiente confirmar: usuario reinicio lamb-institucional-ms tras el fix? Si Flyway quedo con fila `success=false` en `flyway_schema_history` de intento previo fallido, puede necesitar `flyway:repair` o borrar esa fila a mano.
+
+**Frontend (crud-generic + cruds.catalog.ts)**:
+- Campo `__modalidades` (multiref) en regimenes-academicos: `listed: false` -> `true` para mostrar en tabla.
+- `crud-generic.component.ts`: nuevo signal `multiRefColumnIds`, metodo `loadMultiRefColumns(d)` (carga join rows por campo, mapea ownerId->valueIds[]), llamado en `load()`. Helper `multiRefLabels(row, field)`. `fmtCell` extendido con rama `multiref`.
+- Fix bug: tabla mostraba "—" en fila recien creada porque `syncMultiRefFields` no actualizaba `multiRefColumnIds` tras guardar. Fix: update optimista del signal al final del loop de sync.
+- `inst-programa-sede`: campos `idPrograma`/`idSede` eran `number` plano, usuario pidio dropdown. Cambiados a `type: "ref"` con `refPath: "/api/v1/programas"` y `/api/v1/campus-sede/sedes"` resp., `refLabelKey: "nombre"`.
+- Quitado subtitulo descriptivo de regimenes-academicos (usuario pidio "borra eso de abajito"). CUIDADO: `description` es campo requerido en interfaz `CrudDef` (`description: string`) — no se puede borrar la key, solo poner `description: ""`, sino rompe build (`TS2741`) y `ng serve` queda sirviendo bundle viejo (parece que "no cambio nada" pero en realidad build fallo).
+
+**Nota tecnica recurrente**: `cruds.catalog.ts` tiene encoding mixto (algunos acentos como texto escapado tipo `\u00e9`, otros UTF-8 multibyte crudo) — rompe `Edit` tool por exact-match en ciertas lineas. Workaround: `sed -i 'N d'` / `sed -i 'Na\...'` por numero de linea cuando `Edit` falle por esto.
+
+**Sin confirmar al cierre de esta sesion**: reinicio ok de institucional-ms, prueba de guardado en programa-sede con los nuevos dropdowns, recarga visual del subtitulo quitado.
